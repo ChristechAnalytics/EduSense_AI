@@ -437,15 +437,14 @@
     <div class="container">
         <div class="header">
             <h1>🤖 DataSense AI Assistant</h1>
-            <p>Your Personal Education Companion - Powered by Google Gemini 1.5 Flash (Free)</p>
+            <p>Your Personal Education Companion - Powered by the EduSense AI backend</p>
             <div class="info-box" style="max-width: 800px; margin: 20px auto;">
-                <strong>🔑 Setup Instructions:</strong><br>
-                1. Open the HTML file in a text editor<br>
-                2. Find this line: <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';</code><br>
-                3. Replace <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">YOUR_GEMINI_API_KEY_HERE</code> with your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a><br>
-                4. Save the file and refresh this page<br>
+                <strong>🔌 Setup Instructions:</strong><br>
+                1. From <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">ai_app/</code>, copy <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">.env.example</code> to <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">.env</code> and add your Gemini API key<br>
+                2. Start the backend: <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">uvicorn app.main:app --reload --port 8000</code><br>
+                3. Serve this frontend from a local HTTP server (not <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">file://</code>) so CORS works, e.g. <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">python -m http.server 5500</code> from <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">frontend/</code><br>
                 <br>
-                <strong>✨ Using FREE Gemini 1.5 Flash Latest - No cost!</strong>
+                <strong>✨ The API key now lives only on the backend, never in this page.</strong>
             </div>
         </div>
 
@@ -503,8 +502,8 @@
 
     <script>
         let currentRole = null;
-        // Add your free Gemini API key here
-        const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
+        // EduSense AI backend base URL (see ai_app/README.md to run it locally)
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
         let conversationHistory = [];
 
         const rolePrompts = {
@@ -621,19 +620,14 @@ Be informative, engaging, and adaptable to any learning need.`
                 return;
             }
             
-            if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-                showStatus('Please add your Gemini API key in the code. Get it free at: https://makersuite.google.com/app/apikey', 'error');
-                return;
-            }
-            
             input.value = '';
             addMessage('user', message);
-            
+
             document.getElementById('typingIndicator').classList.add('active');
             document.getElementById('sendBtn').disabled = true;
-            
+
              try {
-                 const response = await callGeminiAPI(message);
+                 const response = await callBackendAPI(message);
                  addMessage('ai', response);
              } catch (error) {
                 console.error('Error:', error);
@@ -645,50 +639,38 @@ Be informative, engaging, and adaptable to any learning need.`
             }
         }
 
-        async function callGeminiAPI(userMessage) {
-            const systemPrompt = rolePrompts[currentRole];
-            const fullPrompt = systemPrompt + "\n\nUser Question: " + userMessage + "\n\nProvide a helpful, detailed response:";
-            
-            const requestBody = {
-                contents: [{
-                    parts: [{
-                        text: fullPrompt
-                    }]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.95,
-                    maxOutputTokens: 2048,
-                }
-            };
-            
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+        async function callBackendAPI(userMessage) {
+            // The role prompt becomes the "notes" the chat endpoint answers from;
+            // the last exchange (if any) is passed as context for continuity.
+            const lastExchange = conversationHistory[conversationHistory.length - 1];
+
+            const response = await fetch(`${API_BASE_URL}/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(requestBody)
+                body: JSON.stringify({
+                    notes: rolePrompts[currentRole],
+                    question: userMessage,
+                    context: lastExchange
+                        ? `Previous question: ${lastExchange.user}\nPrevious answer: ${lastExchange.ai}`
+                        : null
+                })
             });
-            
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error?.message || 'Failed to connect to Gemini API');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || 'Failed to reach the EduSense AI backend');
             }
-            
+
             const data = await response.json();
-            
-            if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
-                throw new Error('Invalid response from Gemini API');
-            }
-            
-            const aiResponse = data.candidates[0].content.parts[0].text;
-            
+            const aiResponse = data.answer;
+
             conversationHistory.push({
                 user: userMessage,
                 ai: aiResponse
             });
-            
+
             return aiResponse;
         }
 

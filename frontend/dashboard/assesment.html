@@ -1046,12 +1046,8 @@
 </div>
 
 <script>
-    // IMPORTANT: Replace with your actual Gemini API key
-    const API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; // Replace with your actual key
-
-    if (API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-        alert('⚠️ Please add your Gemini API key!\n\nGet one free at: https://makersuite.google.com/app/apikey\n\nReplace "YOUR_GEMINI_API_KEY_HERE" in the code with your actual key.');
-    }
+    // EduSense AI backend base URL (see ai_app/README.md to run it locally)
+    const API_BASE_URL = 'http://localhost:8000/api/v1';
 
     // Mobile menu toggle
     const menuToggle = document.getElementById('menuToggle');
@@ -1116,129 +1112,76 @@
             return;
         }
 
-        if (API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-            alert('⚠️ Please add your Gemini API key!\n\nGet one free at: https://makersuite.google.com/app/apikey\n\nReplace "YOUR_GEMINI_API_KEY_HERE" in the code with your actual key.');
-            return;
-        }
-
         const generateBtn = document.getElementById('generateAssessmentBtn');
         const originalBtnText = generateBtn.innerHTML;
         generateBtn.innerHTML = '<span>⏳ Generating...</span>';
         generateBtn.disabled = true;
 
         try {
-            const prompt = `You are an expert African educator creating assessments.
-            Generate a ${difficulty} difficulty ${assessmentType} assessment with ${numQuestions} questions for ${subject}, Class ${classLevel}, on the topic "${topic}".
-
-            For Multiple Choice Questions, provide 4 options (A, B, C, D) and clearly state the correct answer.
-            For Short Answer/Essay Questions, provide suggested answer points.
-
-            Format the output clearly with question numbers.
-            Include an answer key at the end for MCQs.`;
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
+            const response = await fetch(`${API_BASE_URL}/assessment`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    contents: [{
-                        parts: [{
-                            text: prompt
-                        }]
-                    }]
+                    subject: subject,
+                    class_level: classLevel,
+                    topic: topic,
+                    assessment_type: assessmentType,
+                    num_questions: parseInt(numQuestions, 10),
+                    difficulty: difficulty
                 })
             });
 
             if (!response.ok) {
-                throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.detail || `HTTP Error: ${response.status}`);
             }
 
             const data = await response.json();
-            const generatedText = data.candidates[0].content.parts[0].text;
 
             const generatedQuestionsOutput = document.getElementById('generatedQuestionsOutput');
-            generatedQuestionsOutput.innerHTML = formatGeneratedQuestions(generatedText, assessmentType);
+            generatedQuestionsOutput.innerHTML = formatGeneratedQuestions(data.questions);
             document.getElementById('generatedQuestionsSection').style.display = 'block';
 
         } catch (error) {
             console.error('Error generating assessment:', error);
-            alert('❌ Error generating assessment. Please check:\n\n1. Your API key is correct\n2. You have an internet connection\n3. API quota is not exceeded\n\nError: ' + error.message);
+            let message = 'Error generating assessment.\n\n' + error.message;
+            if (error.message.includes('Failed to fetch')) {
+                message = `❌ Could not reach the EduSense AI backend at ${API_BASE_URL}.\n\nMake sure ai_app is running and, if you opened this page from disk, serve it over HTTP instead (see ai_app/README.md) so CORS works.`;
+            }
+            alert(message);
         } finally {
             generateBtn.innerHTML = originalBtnText;
             generateBtn.disabled = false;
         }
     }
 
-    function formatGeneratedQuestions(rawText, assessmentType) {
-        let formattedHtml = '';
-        const lines = rawText.split('\n');
-        let questionNumber = 1;
-        let inAnswerKeySection = false;
+    function formatGeneratedQuestions(questions) {
+        let html = '';
 
-        lines.forEach(line => {
-            line = line.trim();
-            if (line.length === 0) return;
+        questions.forEach(q => {
+            html += `<div class="question-item">`;
+            html += `<div class="question-number">Question ${q.question_number}</div>`;
+            html += `<p class="question-text">${q.question}</p>`;
 
-            if (line.startsWith('Answer Key') || line.startsWith('ANSWERS:') || line.startsWith('**Answer Key**')) {
-                inAnswerKeySection = true;
-                formattedHtml += `<h3 style="margin-top: 2rem; color: #4cd964;">${line}</h3>`;
-                return;
-            }
-
-            if (inAnswerKeySection) {
-                formattedHtml += `<p style="color: #b8b8d1;">${line}</p>`;
-                return;
-            }
-
-            // Match numbered questions (1., 2., 1), 2), etc.)
-            const questionMatch = line.match(/^(\d+)\s*[.)]\s*(.*)/);
-            if (questionMatch) {
-                formattedHtml += `<div class="question-item">`;
-                formattedHtml += `<div class="question-number">Question ${questionMatch[1]}</div>`;
-                formattedHtml += `<p class="question-text">${questionMatch[2]}</p>`;
-                questionNumber++;
-            } else if (line.match(/^[A-D][).]\s*(.*)/)) { // Options for MCQs
-                if (assessmentType.includes('Multiple Choice') || assessmentType.includes('Mixed')) {
-                    if (!formattedHtml.endsWith('</ul>')) { // Start a new list if not already in one
-                         formattedHtml += `<ul class="options-list">`;
-                    }
-                    formattedHtml += `<li class="option-item">${line}</li>`;
+            if (q.question_type === 'multiple_choice' && q.options) {
+                html += `<ul class="options-list">`;
+                q.options.forEach(opt => {
+                    html += `<li class="option-item">${opt.option}) ${opt.text}</li>`;
+                });
+                html += `</ul>`;
+                if (q.correct_answer) {
+                    html += `<p style="font-style: italic; color: #4cd964;">Correct answer: ${q.correct_answer}</p>`;
                 }
-            } else if (line.startsWith('(') && line.endsWith(')')) { // Likely an answer or instruction
-                 formattedHtml += `<p style="font-style: italic; color: #b8b8d1;">${line}</p>`;
-                 if (formattedHtml.includes('</ul>')) { // Close list if it was an option list
-                    formattedHtml += `</ul>`;
-                 }
-                 if (formattedHtml.endsWith('</div>')) { // Close question item
-                    formattedHtml += `</div>`;
-                 }
-            } else {
-                if (formattedHtml.includes('</ul>')) { // Close list if it was an option list
-                    formattedHtml += `</ul>`;
-                }
-                if (formattedHtml.endsWith('</div>')) { // Close previous question item if this line isn't part of it
-                    formattedHtml += `</div>`;
-                }
-                formattedHtml += `<p style="color: #b8b8d1;">${line}</p>`; // General text, e.g., prompt or instructions
+            } else if (q.suggested_answer) {
+                html += `<p style="font-style: italic; color: #b8b8d1;">Suggested answer: ${q.suggested_answer}</p>`;
             }
 
-            // If a question was opened but not closed (e.g., if it was a short answer with no options), close it.
-            // This is a heuristic and might need adjustment based on Gemini's exact output format.
-            if (formattedHtml.includes('<div class="question-item">') && !formattedHtml.endsWith('</div>') && !formattedHtml.includes('<ul class="options-list">')) {
-                formattedHtml += `</div>`;
-            }
+            html += `</div>`;
         });
 
-        // Final check to close any open tags
-        if (formattedHtml.includes('<ul class="options-list">') && !formattedHtml.endsWith('</ul>')) {
-            formattedHtml += `</ul>`;
-        }
-        if (formattedHtml.includes('<div class="question-item">') && !formattedHtml.endsWith('</div>')) {
-            formattedHtml += `</div>`;
-        }
-
-        return formattedHtml;
+        return html;
     }
 
 

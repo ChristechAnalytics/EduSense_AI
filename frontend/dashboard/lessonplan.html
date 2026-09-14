@@ -892,6 +892,9 @@
         let currentEditId = null;
         let currentViewId = null;
 
+        // EduSense AI backend base URL (see ai_app/README.md to run it locally)
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+
         // Render lessons
         function renderLessons(filteredLessons = null) {
             const grid = document.getElementById('lessonsGrid');
@@ -994,109 +997,45 @@
                 return;
             }
 
-            // IMPORTANT: Replace with your own API key from https://makersuite.google.com/app/apikey
-            const API_KEY = 'YOUR_GEMINI_API_KEY_HERE';
-            
-            if (!API_KEY || API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-                alert('⚠️ API Key Required!\n\n1. Get a FREE API key at:\nhttps://makersuite.google.com/app/apikey\n\n2. Replace "YOUR_GEMINI_API_KEY_HERE" in the code with your actual key\n\n3. The API key should look like: AIzaSy...');
-                return;
-            }
-
             const button = document.getElementById('aiButton');
             const originalText = button.textContent;
             button.textContent = '⏳ Generating with AI...';
             button.disabled = true;
 
             try {
-                const prompt = `You are an expert educator. Create a detailed lesson plan for: "${topic}"
-
-${objectives ? `Learning Objectives: ${objectives}` : ''}
-
-Provide a comprehensive lesson plan with these exact sections (use these headers):
-
-GRADE LEVEL: (suggest 7-10)
-SUBJECT: (Mathematics, English, Science, or Social Studies)
-DURATION: (in minutes, e.g., 45)
-TITLE: (engaging lesson title)
-
-LEARNING OBJECTIVES:
-(Clear, measurable objectives)
-
-INTRODUCTION:
-(Engaging hook to capture student interest)
-
-MAIN ACTIVITIES:
-(Detailed step-by-step activities)
-
-ASSESSMENT METHODS:
-(How to evaluate student understanding)
-
-MATERIALS NEEDED:
-(List of required resources)
-
-Make it practical and engaging for African classrooms.`;
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${API_KEY}`, {
+                const response = await fetch(`${API_BASE_URL}/lesson-plan`, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        contents: [{
-                            parts: [{
-                                text: prompt
-                            }]
-                        }],
-                        generationConfig: {
-                            temperature: 0.7,
-                            maxOutputTokens: 2048
-                        }
+                        topic: topic,
+                        objectives: objectives || null
                     })
                 });
 
                 if (!response.ok) {
-                    let errorMessage = `HTTP Error: ${response.status}`;
-                    try {
-                        const errorData = await response.json();
-                        errorMessage = errorData.error?.message || errorMessage;
-                        
-                        // Specific error messages
-                        if (response.status === 400) {
-                            errorMessage = 'Invalid API key or request format. Please check your API key.';
-                        } else if (response.status === 429) {
-                            errorMessage = 'API quota exceeded. Please wait a few minutes or check your quota at https://console.cloud.google.com';
-                        } else if (response.status === 403) {
-                            errorMessage = 'API key is not authorized. Please enable the Generative Language API in your Google Cloud Console.';
-                        }
-                    } catch (e) {
-                        console.error('Error parsing error response:', e);
-                    }
-                    throw new Error(errorMessage);
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.detail || `HTTP Error: ${response.status}`);
                 }
 
                 const data = await response.json();
-                
-                if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-                    throw new Error('Invalid response from API. Please try again.');
-                }
 
-                const generatedText = data.candidates[0].content.parts[0].text;
+                fillFormFromAI(data);
 
-                fillFormFromAI(generatedText);
-                
                 alert('✅ Lesson plan generated successfully! Review and edit the details below, then click Save.');
 
             } catch (error) {
                 console.error('Error generating lesson:', error);
-                
+
                 let userMessage = '❌ Error generating lesson plan:\n\n';
-                
+
                 if (error.message.includes('Failed to fetch')) {
-                    userMessage += 'Network Error:\n• Check your internet connection\n• Make sure the API key is correct\n• Check if you have CORS issues (try in a different browser)';
+                    userMessage += `Network Error:\n• Make sure the EduSense AI backend is running at ${API_BASE_URL}\n• If you opened this page directly from disk, serve it over HTTP instead (see ai_app/README.md) so CORS works`;
                 } else {
-                    userMessage += error.message + '\n\nTroubleshooting:\n1. Verify your API key is correct\n2. Check you have enabled the API\n3. Ensure you have available quota\n4. Visit: https://makersuite.google.com/app/apikey';
+                    userMessage += error.message;
                 }
-                
+
                 alert(userMessage);
             } finally {
                 button.textContent = originalText;
@@ -1104,51 +1043,16 @@ Make it practical and engaging for African classrooms.`;
             }
         }
 
-        function fillFormFromAI(text) {
-            // Extract sections using regex
-            const extractSection = (header) => {
-                const regex = new RegExp(`${header}[:\\s]*([\\s\\S]*?)(?=\\n\\n[A-Z\\s]+:|$)`, 'i');
-                const match = text.match(regex);
-                return match ? match[1].trim() : '';
-            };
-
-            // Fill grade level
-            const gradeMatch = text.match(/GRADE LEVEL[:\\s]*(Grade\s*\d+|[7-9]|10)/i);
-            if (gradeMatch) {
-                const gradeNum = gradeMatch[1].replace(/\D/g, '');
-                if (gradeNum >= 7 && gradeNum <= 10) {
-                    document.getElementById('gradeLevel').value = `Grade ${gradeNum}`;
-                }
-            }
-
-            // Fill subject
-            const subjectMatch = text.match(/SUBJECT[:\\s]*(Mathematics|English|Science|Social Studies)/i);
-            if (subjectMatch) {
-                document.getElementById('subject').value = subjectMatch[1];
-            }
-
-            // Fill duration
-            const durationMatch = text.match(/DURATION[:\\s]*(\d+)/i);
-            if (durationMatch) {
-                document.getElementById('duration').value = durationMatch[1];
-            } else {
-                document.getElementById('duration').value = '45';
-            }
-
-            // Fill title
-            const titleMatch = text.match(/TITLE[:\\s]*(.+?)(?=\n|$)/i);
-            if (titleMatch) {
-                document.getElementById('title').value = titleMatch[1].trim();
-            } else {
-                document.getElementById('title').value = document.getElementById('aiTopic').value;
-            }
-
-            // Fill other fields
-            document.getElementById('objectives').value = extractSection('LEARNING OBJECTIVES');
-            document.getElementById('introduction').value = extractSection('INTRODUCTION');
-            document.getElementById('activities').value = extractSection('MAIN ACTIVITIES');
-            document.getElementById('assessment').value = extractSection('ASSESSMENT METHODS');
-            document.getElementById('materials').value = extractSection('MATERIALS NEEDED');
+        function fillFormFromAI(data) {
+            document.getElementById('gradeLevel').value = data.grade_level || '';
+            document.getElementById('subject').value = data.subject || '';
+            document.getElementById('duration').value = data.duration_minutes || 45;
+            document.getElementById('title').value = data.title || document.getElementById('aiTopic').value;
+            document.getElementById('objectives').value = data.learning_objectives || '';
+            document.getElementById('introduction').value = data.introduction || '';
+            document.getElementById('activities').value = data.main_activities || '';
+            document.getElementById('assessment').value = data.assessment_methods || '';
+            document.getElementById('materials').value = data.materials_needed || '';
         }
 
         // Form submission

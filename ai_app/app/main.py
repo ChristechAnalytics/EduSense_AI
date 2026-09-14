@@ -11,6 +11,8 @@ from app.routes import (
     curriculum_router,
     mcq_router,
     flashcard_router,
+    lesson_plan_router,
+    assessment_router,
 )
 from app.config import settings
 import logging
@@ -37,7 +39,9 @@ app = FastAPI(
     - 📚 Generate comprehensive curricula from documents
     - ✅ Create practice MCQs with correct answers and explanations
     - 🎴 Generate flashcards for effective learning
-    
+    - 📝 Generate a single classroom lesson plan from a topic
+    - 🧪 Generate a topic-based assessment (MCQ, short answer, and/or essay)
+
     All endpoints accept text input and return structured JSON responses.
     """,
     docs_url="/docs",
@@ -91,6 +95,8 @@ app.include_router(chat_router, prefix=API_PREFIX)
 app.include_router(curriculum_router, prefix=API_PREFIX)
 app.include_router(mcq_router, prefix=API_PREFIX)
 app.include_router(flashcard_router, prefix=API_PREFIX)
+app.include_router(lesson_plan_router, prefix=API_PREFIX)
+app.include_router(assessment_router, prefix=API_PREFIX)
 
 
 @app.get("/", tags=["Root"])
@@ -121,7 +127,9 @@ async def global_health_check():
             "chat": "operational",
             "curriculum": "operational",
             "mcq": "operational",
-            "flashcards": "operational"
+            "flashcards": "operational",
+            "lesson_plan": "operational",
+            "assessment": "operational"
         }
     }
 

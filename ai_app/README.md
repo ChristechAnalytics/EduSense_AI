@@ -270,7 +270,83 @@ Generate study flashcards from learning materials.
 }
 ```
 
-### 5. Health Check
+### 5. Generate Lesson Plan
+
+**POST** `/api/v1/lesson-plan`
+
+Generate a single classroom lesson plan from a topic (teacher-facing, as opposed to the multi-week curriculum generator).
+
+**Request:**
+```json
+{
+  "topic": "Photosynthesis",
+  "objectives": "Understand the inputs and outputs of photosynthesis"
+}
+```
+
+**Response:**
+```json
+{
+  "topic": "Photosynthesis",
+  "grade_level": "Grade 8",
+  "subject": "Science",
+  "duration_minutes": 45,
+  "title": "Unlocking the Secrets of Photosynthesis",
+  "learning_objectives": "Students will be able to explain the inputs and outputs of photosynthesis...",
+  "introduction": "Begin with a real-world question about how plants get their energy...",
+  "main_activities": "1. Diagram the photosynthesis equation...",
+  "assessment_methods": "Exit ticket with 3 short-answer questions...",
+  "materials_needed": "Diagrams, worksheet handouts",
+  "timestamp": "2025-10-08T16:30:00"
+}
+```
+
+### 6. Generate Assessment
+
+**POST** `/api/v1/assessment`
+
+Generate a topic-based classroom assessment (multiple choice, short answer, and/or essay), as opposed to the content-based MCQ generator above.
+
+**Request:**
+```json
+{
+  "subject": "Biology",
+  "class_level": "SS2",
+  "topic": "Photosynthesis",
+  "assessment_type": "Mixed (MCQ + Short Answer)",
+  "num_questions": 10,
+  "difficulty": "Medium"
+}
+```
+
+**Response:**
+```json
+{
+  "subject": "Biology",
+  "class_level": "SS2",
+  "topic": "Photosynthesis",
+  "assessment_type": "Mixed (MCQ + Short Answer)",
+  "difficulty": "Medium",
+  "questions": [
+    {
+      "question_number": 1,
+      "question_type": "multiple_choice",
+      "question": "What is the primary purpose of photosynthesis?",
+      "options": [
+        {"option": "A", "text": "Convert light to chemical energy"},
+        {"option": "B", "text": "Produce oxygen"},
+        {"option": "C", "text": "Absorb water"},
+        {"option": "D", "text": "Release CO2"}
+      ],
+      "correct_answer": "A",
+      "suggested_answer": null
+    }
+  ],
+  "timestamp": "2025-10-08T16:30:00"
+}
+```
+
+### 7. Health Check
 
 **GET** `/api/v1/education/health`
 
