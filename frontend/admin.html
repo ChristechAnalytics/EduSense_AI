@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - DataSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .topbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .container {
+            display: flex;
+            min-height: calc(100vh - 81px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 30px 20px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #b8b8d1;
+            text-decoration: none;
+            padding: 12px 15px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            color: #fff;
+            transform: translateX(5px);
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .stat-card:hover::before {
+            opacity: 0.1;
+        }
+
+        .stat-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .stat-value {
+            font-size: 48px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: #b8b8d1;
+            font-size: 16px;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 1s ease-out;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #b8b8d1;
+        }
+
+        tr {
+            transition: all 0.3s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .remove-btn {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            border: none;
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .remove-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 15px rgba(239, 68, 68, 0.5);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #0f0c29, #302b63);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: #b8b8d1;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b8b8d1;
+            font-weight: bold;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .coming-soon {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .coming-soon-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .topbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <div class="logo-section">
+            <div class="logo">DataSense</div>
+            <div class="admin-badge">ADMIN</div>
+        </div>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+    </div>
+
+    <div class="container">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active">📊 Dashboard Overview</a></li>
+                <li><a href="#teachers">🧑‍🏫 Teachers</a></li>
+                <li><a href="#students">🎓 Students</a></li>
+                <li><a href="#" onclick="openSchoolModal()">🏫 Onboard New School</a></li>
+                <li><a href="index.html">🏠 Home</a></li>
+                <li><a href="dashboard.html">👨‍🏫 Teacher Dashboard</a></li>
+                <li><a href="student.html">👨‍🎓 Student Profile</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">🧑‍🏫</div>
+                    <div class="stat-value" id="teacherCount">0</div>
+                    <div class="stat-label">Total Teachers</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🎓</div>
+                    <div class="stat-value" id="studentCount">0</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">🏫</div>
+                    <div class="stat-value" id="schoolCount">0</div>
+                    <div class="stat-label">Schools Onboarded</div>
+                </div>
+            </div>
+
+            <div class="section" id="teachers">
+                <div class="section-header">
+                    <h2 class="section-title">Teacher Management</h2>
+                    <button class="add-btn" onclick="openTeacherModal()">➕ Add Teacher</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Subject</th>
+                                <th>Email</th>
+                                <th>School</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="teacherTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="section" id="students">
+                <div class="section-header">
+                    <h2 class="section-title">Student Management</h2>
+                    <button class="add-btn" onclick="openStudentModal()">➕ Add Student</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Student ID</th>
+                                <th>Grade</th>
+                                <th>School</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Teacher Modal -->
+    <div class="modal" id="teacherModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Teacher</h3>
+                <button class="close-btn" onclick="closeModal('teacherModal')">&times;</button>
+            </div>
+            <form onsubmit="addTeacher(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" required placeholder="Enter teacher's name">
+                </div>
+                <div class="form-group">
+                    <label>Subject</label>
+                    <input type="text" required placeholder="e.g., Mathematics">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" required placeholder="teacher@school.com">
+                </div>
+                <div class="form-group">
+                    <label>School</label>
+                    <select required>
+                        <option value="">Select School</option>
+                        <option>Lagos International School</option>
+                        <option>Victoria Garden City Academy</option>
+                        <option>Kings College Lagos</option>
+                        <option>Corona Schools</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Add Teacher</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Student Modal -->
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Student</h3>
+                <button class="close-btn" onclick="closeModal('studentModal')">&times;</button>
+            </div>
+            <form onsubmit="addStudent(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" required placeholder="Enter student's name">
+                </div>
+                <div class="form-group">
+                    <label>Grade</label>
+                    <select required>
+                        <option value="">Select Grade</option>
+                        <option>Grade 7</option>
+                        <option>Grade 8</option>
+                        <option>Grade 9</option>
+                        <option>Grade 10</option>
+                        <option>Grade 11</option>
+                        <option>Grade 12</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>School</label>
+                    <select required>
+                        <option value="">Select School</option>
+                        <option>Lagos International School</option>
+                        <option>Victoria Garden City Academy</option>
+                        <option>Kings College Lagos</option>
+                        <option>Corona Schools</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn">Add Student</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- School Modal -->
+    <div class="modal" id="schoolModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Onboard New School</h3>
+                <button class="close-btn" onclick="closeModal('schoolModal')">&times;</button>
+            </div>
+            <div class="coming-soon">
+                <div class="coming-soon-icon">🚀</div>
+                <h3 style="color: #667eea; margin-bottom: 15px;">Feature Coming Soon!</h3>
+                <p style="color: #b8b8d1;">School onboarding workflow is currently under development. This will allow you to add new educational institutions to the DataSense platform.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const teachers = [
+            { name: "Dr. Adebayo Oladele", subject: "Mathematics", email: "adebayo@lis.edu.ng", school: "Lagos International School" },
+            { name: "Mrs. Chioma Nwosu", subject: "English Literature", email: "chioma@lis.edu.ng", school: "Lagos International School" },
+            { name: "Mr. Oluwaseun Taiwo", subject: "Physics", email: "seun@vgc.edu.ng", school: "Victoria Garden City Academy" },
+            { name: "Dr. Fatima Ibrahim", subject: "Chemistry", email: "fatima@kings.edu.ng", school: "Kings College Lagos" },
+            { name: "Mr. Emmanuel Okafor", subject: "Computer Science", email: "emmanuel@corona.edu.ng", school: "Corona Schools" },
+            { name: "Mrs. Blessing Eze", subject: "Biology", email: "blessing@lis.edu.ng", school: "Lagos International School" }
+        ];
+
+        const students = [
+            { name: "Chidera Okonkwo", id: "DS-2348-1092", grade: "Grade 10", school: "Lagos International School" },
+            { name: "Aisha Mohammed", id: "DS-1847-3492", grade: "Grade 9", school: "Victoria Garden City Academy" },
+            { name: "Tunde Bakare", id: "DS-5621-7834", grade: "Grade 11", school: "Kings College Lagos" },
+            { name: "Ngozi Obi", id: "DS-3947-2185", grade: "Grade 8", school: "Corona Schools" },
+            { name: "Kelechi Nnadi", id: "DS-7263-9481", grade: "Grade 10", school: "Lagos International School" },
+            { name: "Amina Yusuf", id: "DS-4582-1673", grade: "Grade 9", school: "Victoria Garden City Academy" }
+        ];
+
+        function animateCount(element, target, duration = 1500) {
+            let start = 0;
+            const increment = target / (duration / 16);
+            const timer = setInterval(() => {
+                start += increment;
+                if (start >= target) {
+                    element.textContent = target;
+                    clearInterval(timer);
+                } else {
+                    element.textContent = Math.floor(start);
+                }
+            }, 16);
+        }
+
+        function loadDashboard() {
+            animateCount(document.getElementById('teacherCount'), teachers.length);
+            animateCount(document.getElementById('studentCount'), 230);
+            animateCount(document.getElementById('schoolCount'), 4);
+
+            loadTeachers();
+            loadStudents();
+        }
+
+        function loadTeachers() {
+            const tbody = document.getElementById('teacherTable');
+            tbody.innerHTML = '';
+            teachers.forEach((teacher, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${teacher.name}</td>
+                    <td>${teacher.subject}</td>
+                    <td>${teacher.email}</td>
+                    <td>${teacher.school}</td>
+                    <td><button class="remove-btn" onclick="removeTeacher(${index})">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function loadStudents() {
+            const tbody = document.getElementById('studentTable');
+            tbody.innerHTML = '';
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${student.id}</td>
+                    <td>${student.grade}</td>
+                    <td>${student.school}</td>
+                    <td><button class="remove-btn" onclick="removeStudent(${index})">Remove</button></td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function openTeacherModal() {
+            document.getElementById('teacherModal').classList.add('active');
+        }
+
+        function openStudentModal() {
+            document.getElementById('studentModal').classList.add('active');
+        }
+
+        function openSchoolModal() {
+            document.getElementById('schoolModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function addTeacher(event) {
+            event.preventDefault();
+            alert('Teacher added successfully! (Demo mode - no backend connected)');
+            closeModal('teacherModal');
+            event.target.reset();
+        }
+
+        function addStudent(event) {
+            event.preventDefault();
+            alert('Student added successfully! (Demo mode - no backend connected)');
+            closeModal('studentModal');
+            event.target.reset();
+        }
+
+        function removeTeacher(index) {
+            if (confirm('Are you sure you want to remove this teacher?')) {
+                teachers.splice(index, 1);
+                loadTeachers();
+                animateCount(document.getElementById('teacherCount'), teachers.length);
+            }
+        }
+
+        function removeStudent(index) {
+            if (confirm('Are you sure you want to remove this student?')) {
+                students.splice(index, 1);
+                loadStudents();
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'index.html';
+            }
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        window.addEventListener('load', loadDashboard);
+    </script>
+</body>
+</html>

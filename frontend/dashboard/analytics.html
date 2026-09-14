@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataSense - Analytics</title>
+    <style>
+        /* General Styles - Copied from your original dashboard styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: rgba(15, 12, 41, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .logo-container {
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 1.5rem 0;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            margin: 0.3rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: rgba(15, 12, 41, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 2rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-bar input:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .notification-icon {
+            position: relative;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #667eea;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #f093fb;
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 1rem;
+            background: rgba(15, 12, 41, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 0.5rem 0;
+            min-width: 180px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dropdown-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+            opacity: 0;
+            animation: fadeInContent 0.6s ease forwards;
+        }
+
+        @keyframes fadeInContent {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Page Header */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Card Styles */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        /* Analytics Specific Styles */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px; /* Standard height for charts */
+            background: rgba(255, 255, 255, 0.03); /* Lighter background for chart area */
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #b8b8d1;
+            font-style: italic;
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .summary-item {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            text-align: center;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 0.3rem;
+        }
+
+        .summary-label {
+            font-size: 0.85rem;
+            color: #b8b8d1;
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b8b8d1;
+            font-size: 0.9rem;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 0.7rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .filter-group select::placeholder,
+        .filter-group input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-group select option {
+            background: #1a1736;
+            color: #fff;
+        }
+
+        /* AI Insights Section */
+        .ai-insights-card {
+            border-left: 4px solid #f093fb; /* Accent color for AI */
+        }
+
+        .ai-insights-card .card-title {
+            color: #f093fb; /* Accent color for AI title */
+        }
+
+        .insight-item {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background: rgba(240, 147, 251, 0.1); /* Lighter accent background */
+            border-radius: 8px;
+            border-left: 3px solid #f093fb;
+        }
+
+        .insight-item strong {
+            color: #fff;
+        }
+
+        .insight-item p {
+            font-size: 0.95rem;
+            color: #b8b8d1;
+            margin-top: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .search-bar {
+                margin: 0 1rem;
+            }
+
+            .topbar {
+                padding: 1rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+        .sidebarclorlink{
+            text-decoration: none;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <div class="logo">DataSense</div>
+            </div>
+            <ul class="nav-menu">
+                 <li class="nav-item">
+                    <a href="../dashboard.html" class="sidebarclorlink">
+                        <span class="nav-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../ai.html" class="sidebarclorlink">
+                        <span class="nav-icon">📊</span>
+                        <span>Speak to AI</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="lessonplan.html" class="sidebarclorlink">
+                        <span class="nav-icon">🎓</span>
+                        <span>Lesson Plans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="student.html" class="sidebarclorlink">
+                        <span class="nav-icon">👥</span>
+                        <span>Students</span>
+                    </a>
+                </li>
+                <li class="nav-item active">
+                    <a href="analytics.html" class="sidebarclorlink">
+                        <span class="nav-icon">📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="assesment.html" class="sidebarclorlink">
+                        <span class="nav-icon">📝</span>
+                        <span>Assessments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void();" class="sidebarclorlink">
+                        <span class="nav-icon">💬</span>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void();" class="sidebarclorlink">
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Bar -->
+            <div class="topbar">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search analytics data..." id="searchInput">
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-icon" id="notificationIcon">
+                        🔔
+                        <span class="notification-badge">3</span>
+                    </div>
+                    <div class="profile" id="profileToggle">
+                        <div class="profile-avatar">AM</div>
+                        <span>Amina M.</span>
+                        <span>▼</span>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <div class="dropdown-item">👤 My Profile</div>
+                            <div class="dropdown-item">⚙️ Settings</div>
+                            <div class="dropdown-item">📚 Resources</div>
+                            <div class="dropdown-item">🚪 Logout</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">📈 Analytics & Insights</h1>
+                        <p style="color: #b8b8d1; margin-top: 0.5rem;">Dive deep into performance trends and AI-powered recommendations</p>
+                    </div>
+                </div>
+
+                <!-- Filters for Analytics -->
+                <div class="filter-section">
+                    <div class="filter-group">
+                        <label for="filterPeriod">Time Period</label>
+                        <select id="filterPeriod" onchange="updateAnalytics()">
+                            <option value="month">Last Month</option>
+                            <option value="quarter">Last Quarter</option>
+                            <option value="year">Last Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterClass">Class</label>
+                        <select id="filterClass" onchange="updateAnalytics()">
+                            <option value="all">All Classes</option>
+                            <option value="Grade 7">Grade 7</option>
+                            <option value="Grade 8">Grade 8</option>
+                            <option value="Grade 9">Grade 9</option>
+                            <option value="Grade 10">Grade 10</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterSubject">Subject</label>
+                        <select id="filterSubject" onchange="updateAnalytics()">
+                            <option value="all">All Subjects</option>
+                            <option value="Mathematics">Mathematics</option>
+                            <option value="English">English</option>
+                            <option value="Science">Science</option>
+                            <option value="Social Studies">Social Studies</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="filterStudent">Student (Optional)</label>
+                        <input type="text" id="filterStudent" placeholder="Enter student name or ID..." oninput="updateAnalytics()">
+                    </div>
+                </div>
+
+                <!-- Analytics Main Grid -->
+                <div class="analytics-grid">
+                    <!-- Overall Performance Trend -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Overall Performance Trend</h2>
+                        </div>
+                        <div class="chart-container" id="performanceTrendChart">
+                            Line chart showing performance over time (e.g., average scores).
+                        </div>
+                        <div class="summary-stats">
+                            <div class="summary-item">
+                                <div class="summary-value" id="currentAvgPerformance">82%</div>
+                                <div class="summary-label">Current Avg.</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value" id="performanceChange">↑ 3.2%</div>
+                                <div class="summary-label">Last Period</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class vs. Subject Performance -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Class vs. Subject Performance</h2>
+                        </div>
+                        <div class="chart-container" id="classSubjectChart">
+                            Bar chart comparing class performance across subjects.
+                        </div>
+                        <div class="summary-stats">
+                            <div class="summary-item">
+                                <div class="summary-value" id="topPerformingClass">Grade 9</div>
+                                <div class="summary-label">Top Class</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value" id="weakestSubject">Mathematics</div>
+                                <div class="summary-label">Weakest Subject</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Individual Student Progress (example) -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Individual Student Progress</h2>
+                        </div>
+                        <div class="chart-container" id="studentProgressChart">
+                            Detailed line chart for selected student's scores.
+                        </div>
+                        <div class="summary-stats">
+                            <div class="summary-item">
+                                <div class="summary-value" id="selectedStudentName">Chidi O.</div>
+                                <div class="summary-label">Student</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value" id="studentGrowth">↑ 5%</div>
+                                <div class="summary-label">Growth (last 3m)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Assessment Breakdown -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Assessment Breakdown</h2>
+                        </div>
+                        <div class="chart-container" id="assessmentBreakdownChart">
+                            Pie chart showing score distribution for a specific assessment.
+                        </div>
+                        <div class="summary-stats">
+                            <div class="summary-item">
+                                <div class="summary-value" id="assessmentCount">15</div>
+                                <div class="summary-label">Total Assessments</div>
+                            </div>
+                            <div class="summary-item">
+                                <div class="summary-value" id="failedAssessments">2</div>
+                                <div class="summary-label">Below Threshold</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI-Powered Insights & Recommendations -->
+                <div class="card ai-insights-card">
+                    <div class="card-header">
+                        <h2 class="card-title">✨ AI-Powered Insights & Recommendations</h2>
+                    </div>
+                    <div id="aiInsightsContent">
+                        <div class="insight-item">
+                            <strong>Trend Alert:</strong>
+                            <p>Mathematics performance for Grade 8 students has shown a slight decline (2.5%) over the last month. Recommend reviewing recent lesson plans and considering a targeted intervention for foundational concepts.</p>
+                        </div>
+                        <div class="insight-item">
+                            <strong>High Performer Recommendation:</strong>
+                            <p>Aisha M. (Grade 9) consistently scores above 90% in Science. Consider assigning her advanced projects or mentorship opportunities to further challenge her.</p>
+                        </div>
+                        <div class="insight-item">
+                            <strong>At-Risk Intervention:</strong>
+                            <p>Kwame A. (Grade 8) continues to struggle in multiple subjects. AI predicts a significant drop if no intervention is made within the next two weeks. Suggest a personalized learning path focusing on his identified weak areas.</p>
+                        </div>
+                        <div class="insight-item">
+                            <strong>Engagement Booster:</strong>
+                            <p>Class 7B shows lower average engagement in online assignments. AI suggests incorporating more interactive elements and collaborative tasks.</p>
+                        </div>
+                    </div>
+                    <button class="btn-primary" style="width: auto; margin-top: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🔄</span>
+                        <span>Generate More AI Insights</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+        const menuToggle = document.getElementById('menuToggle');
+        const profileToggle = document.getElementById('profileToggle');
+        const profileDropdown = document.getElementById('profileDropdown');
+        const searchInput = document.getElementById('searchInput');
+
+        // Initial update on load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateAnalytics();
+        });
+
+        // Toggle mobile sidebar
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+            mainContent.classList.toggle('expanded'); // Adjust main content margin
+        });
+
+        // Toggle profile dropdown
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            profileDropdown.classList.remove('show');
+        });
+
+        // Function to simulate updating analytics data and charts
+        function updateAnalytics() {
+            const period = document.getElementById('filterPeriod').value;
+            const className = document.getElementById('filterClass').value;
+            const subject = document.getElementById('filterSubject').value;
+            const studentSearch = document.getElementById('filterStudent').value;
+
+            console.log(`Updating analytics for: Period=${period}, Class=${className}, Subject=${subject}, Student=${studentSearch}`);
+
+            // In a real application, you would fetch data from a backend
+            // based on these filters and then render charts using a library like Chart.js or D3.js.
+
+            // Simulate chart updates (by changing placeholder text)
+            document.getElementById('performanceTrendChart').innerHTML = `
+                Line chart for ${period} performance. (Filtered by: ${className}, ${subject}, ${studentSearch})
+            `;
+            document.getElementById('classSubjectChart').innerHTML = `
+                Bar chart for class/subject comparison. (Filtered by: ${period})
+            `;
+            document.getElementById('studentProgressChart').innerHTML = `
+                Line chart for student progress. (Filtered by: ${period}, ${studentSearch || 'selected student'})
+            `;
+            document.getElementById('assessmentBreakdownChart').innerHTML = `
+                Pie chart for assessment breakdown. (Filtered by: ${period}, ${className}, ${subject})
+            `;
+
+            // Simulate updating summary stats
+            document.getElementById('currentAvgPerformance').textContent = `${(80 + Math.floor(Math.random() * 5))}%`;
+            document.getElementById('performanceChange').textContent = `↑ ${ (1 + Math.random() * 3).toFixed(1)}%`;
+            document.getElementById('topPerformingClass').textContent = ['Grade 9', 'Grade 7', 'Grade 10'][Math.floor(Math.random() * 3)];
+            document.getElementById('weakestSubject').textContent = ['Mathematics', 'English', 'Science'][Math.floor(Math.random() * 3)];
+            document.getElementById('selectedStudentName').textContent = studentSearch || 'Chidi O.';
+            document.getElementById('studentGrowth').textContent = `↑ ${ (2 + Math.random() * 5).toFixed(0)}%`;
+            document.getElementById('assessmentCount').textContent = `${(10 + Math.floor(Math.random() * 10))}`;
+            document.getElementById('failedAssessments').textContent = `${(1 + Math.floor(Math.random() * 3))}`;
+
+            // Simulate AI Insights updates (can be more sophisticated with actual AI integration)
+            const aiInsightsContent = document.getElementById('aiInsightsContent');
+            aiInsightsContent.innerHTML = `
+                <div class="insight-item">
+                    <strong>Smart Insight for ${className || 'All Classes'}:</strong>
+                    <p>AI suggests that focusing on personalized feedback for homework assignments could boost overall performance by an estimated 7% in the next grading period. Specifically, target students like Kwame A. and Peter M. for immediate impact.</p>
+                </div>
+                <div class="insight-item">
+                    <strong>Curriculum Focus:</strong>
+                    <p>Students are excelling in ${subject === 'all' ? 'English' : subject} but showing relative difficulty in applying critical thinking skills. Consider lesson plans that integrate more problem-solving scenarios.</p>
+                </div>
+            `;
+        }
+
+        // Search functionality for analytics (can be more specific later)
+        searchInput.addEventListener('input', updateAnalytics);
+
+        // Notification icon click
+        document.getElementById('notificationIcon').addEventListener('click', () => {
+            alert('Notification panel - Full feature coming soon!');
+        });
+    </script>
+</body>
+</html>

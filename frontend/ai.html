@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataSense AI Assistant - Your Personal Education Companion</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-links a {
+            color: #b8b8d1;
+            text-decoration: none;
+            margin-left: 20px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .header h1 {
+            font-size: 48px;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            color: #b8b8d1;
+            font-size: 18px;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease;
+        }
+
+        .role-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .role-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            border-color: #667eea;
+        }
+
+        .role-card.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(118, 75, 162, 0.2));
+            border-color: #667eea;
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+        }
+
+        .role-icon {
+            font-size: 64px;
+            margin-bottom: 15px;
+        }
+
+        .role-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .role-desc {
+            color: #b8b8d1;
+            font-size: 14px;
+        }
+
+        .api-setup {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            animation: fadeIn 1.2s ease;
+        }
+
+        .api-setup h3 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        .api-input-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .api-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .api-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .save-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .save-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .chat-container {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            animation: fadeIn 1.4s ease;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 10px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.user {
+            text-align: right;
+        }
+
+        .message-content {
+            display: inline-block;
+            padding: 15px 20px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+        }
+
+        .message.ai .message-content {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            text-align: left;
+        }
+
+        .message-label {
+            font-size: 12px;
+            color: #b8b8d1;
+            margin-bottom: 5px;
+        }
+
+        .chat-input-area {
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #b8b8d1;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+            border: 1px solid #f87171;
+        }
+
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid #4ade80;
+        }
+
+        .status.info {
+            background: rgba(102, 126, 234, 0.2);
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 15px;
+            width: fit-content;
+            margin-bottom: 20px;
+        }
+
+        .typing-indicator.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .typing-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin: 0 3px;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+
+            .role-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .api-input-group {
+                flex-direction: column;
+            }
+
+            .chat-input-area {
+                flex-direction: column;
+            }
+
+            .message-content {
+                max-width: 90%;
+            }
+        }
+
+        .info-box {
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid #667eea;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #b8b8d1;
+        }
+
+        .info-box a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .info-box a:hover {
+            color: #f093fb;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">DataSense AI</div>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="student.html">Student Profile</a>
+            <a href="admin.html">Admin</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="header">
+            <h1>🤖 DataSense AI Assistant</h1>
+            <p>Your Personal Education Companion - Powered by Google Gemini 1.5 Flash (Free)</p>
+            <div class="info-box" style="max-width: 800px; margin: 20px auto;">
+                <strong>🔑 Setup Instructions:</strong><br>
+                1. Open the HTML file in a text editor<br>
+                2. Find this line: <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">const GEMINI_API_KEY = 'YOUR_GEMINI_API_KEY_HERE';</code><br>
+                3. Replace <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">YOUR_GEMINI_API_KEY_HERE</code> with your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a><br>
+                4. Save the file and refresh this page<br>
+                <br>
+                <strong>✨ Using FREE Gemini 1.5 Flash Latest - No cost!</strong>
+            </div>
+        </div>
+
+        <div class="role-selector">
+            <div class="role-card" onclick="selectRole('teacher')">
+                <div class="role-icon">👨‍🏫</div>
+                <div class="role-title">Teacher</div>
+                <div class="role-desc">Get help with lesson planning, assessments, and student engagement strategies</div>
+            </div>
+            <div class="role-card" onclick="selectRole('student')">
+                <div class="role-icon">🎓</div>
+                <div class="role-title">Student</div>
+                <div class="role-desc">Get homework help, study tips, and concept explanations</div>
+            </div>
+            <div class="role-card" onclick="selectRole('parent')">
+                <div class="role-icon">👨‍👩‍👧</div>
+                <div class="role-title">Parent</div>
+                <div class="role-desc">Learn how to support your child's education and track their progress</div>
+            </div>
+            <div class="role-card" onclick="selectRole('general')">
+                <div class="role-icon">📚</div>
+                <div class="role-title">General Learner</div>
+                <div class="role-desc">Explore any topic, learn new skills, and expand your knowledge</div>
+            </div>
+        </div>
+
+        <div id="statusMessage"></div>
+
+        <div class="chat-container">
+            <div class="quick-actions" id="quickActions">
+                <!-- Quick action buttons will be inserted here -->
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="message-label">AI Assistant</div>
+                    <div class="message-content">
+                        Hello! 👋 I'm your DataSense AI Assistant. Please select your role above and set up your API key to get started. I'm here to help with all your educational needs!
+                    </div>
+                </div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+                <span class="typing-dot"></span>
+            </div>
+
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send 📤</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRole = null;
+        // Add your free Gemini API key here
+        const GEMINI_API_KEY = 'AIzaSyCVa6LiPIE7fL9vISRtWRI4ayMx0kXHVTc';
+        let conversationHistory = [];
+
+        const rolePrompts = {
+            teacher: `You are an experienced AI teaching assistant for African educators. You help teachers with:
+- Creating culturally relevant lesson plans
+- Designing assessments and rubrics
+- Managing classroom dynamics
+- Using technology in education
+- Understanding student learning styles
+- Addressing diverse learning needs
+- Professional development advice
+Be practical, supportive, and provide actionable strategies. Consider resource constraints common in African schools.`,
+            
+            student: `You are a friendly AI tutor for African students. You help with:
+- Explaining difficult concepts in simple terms
+- Homework assistance (guide, don't just give answers)
+- Study strategies and time management
+- Exam preparation tips
+- Building confidence in learning
+- Career guidance
+Be encouraging, patient, and use relatable examples. Break down complex topics into digestible parts.`,
+            
+            parent: `You are a supportive AI education advisor for parents. You help with:
+- Understanding curriculum and expectations
+- Supporting children's learning at home
+- Communicating with teachers effectively
+- Addressing learning challenges
+- Fostering study habits
+- Understanding child development
+Be empathetic, practical, and culturally sensitive to African family dynamics.`,
+            
+            general: `You are a knowledgeable AI learning companion. You help with:
+- Explaining any topic clearly
+- Teaching new skills
+- Answering questions across subjects
+- Recommending learning resources
+- Encouraging lifelong learning
+- Providing diverse perspectives
+Be informative, engaging, and adaptable to any learning need.`
+        };
+
+        const quickActions = {
+            teacher: [
+                "Create a lesson plan",
+                "Assessment strategies",
+                "Classroom management tips",
+                "Student engagement ideas"
+            ],
+            student: [
+                "Explain this concept",
+                "Help with homework",
+                "Study techniques",
+                "Exam preparation"
+            ],
+            parent: [
+                "Support my child's learning",
+                "Talk to teachers",
+                "Learning challenges",
+                "Build study habits"
+            ],
+            general: [
+                "Learn something new",
+                "Explain a topic",
+                "Recommend resources",
+                "Career advice"
+            ]
+        };
+
+        function selectRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.target.closest('.role-card').classList.add('active');
+            
+            updateQuickActions();
+            
+            const welcomeMessages = {
+                teacher: "Great! I'm here to help you create amazing learning experiences for your students. How can I assist you today?",
+                student: "Awesome! I'm here to help you learn and succeed. What would you like to work on?",
+                parent: "Welcome! I'm here to help you support your child's educational journey. What would you like to know?",
+                general: "Perfect! I'm ready to help you learn anything you're curious about. What interests you?"
+            };
+            
+            addMessage('ai', welcomeMessages[role]);
+        }
+
+        function updateQuickActions() {
+            if (!currentRole) return;
+            
+            const container = document.getElementById('quickActions');
+            container.innerHTML = '';
+            
+            quickActions[currentRole].forEach(action => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-btn';
+                btn.textContent = action;
+                btn.onclick = () => {
+                    document.getElementById('chatInput').value = action;
+                    sendMessage();
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            if (!currentRole) {
+                showStatus('Please select your role first (Teacher, Student, Parent, or General Learner)', 'error');
+                return;
+            }
+            
+            if (GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+                showStatus('Please add your Gemini API key in the code. Get it free at: https://makersuite.google.com/app/apikey', 'error');
+                return;
+            }
+            
+            input.value = '';
+            addMessage('user', message);
+            
+            document.getElementById('typingIndicator').classList.add('active');
+            document.getElementById('sendBtn').disabled = true;
+            
+             try {
+                 const response = await callGeminiAPI(message);
+                 addMessage('ai', response);
+             } catch (error) {
+                console.error('Error:', error);
+                 showStatus('Error: ' + error.message, 'error');
+                 addMessage('ai', "I apologize, there was an error with your internet");
+             } finally {
+                document.getElementById('typingIndicator').classList.remove('active');
+                document.getElementById('sendBtn').disabled = false;
+            }
+        }
+
+        async function callGeminiAPI(userMessage) {
+            const systemPrompt = rolePrompts[currentRole];
+            const fullPrompt = systemPrompt + "\n\nUser Question: " + userMessage + "\n\nProvide a helpful, detailed response:";
+            
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: fullPrompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 2048,
+                }
+            };
+            
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Failed to connect to Gemini API');
+            }
+            
+            const data = await response.json();
+            
+            if (!data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
+                throw new Error('Invalid response from Gemini API');
+            }
+            
+            const aiResponse = data.candidates[0].content.parts[0].text;
+            
+            conversationHistory.push({
+                user: userMessage,
+                ai: aiResponse
+            });
+            
+            return aiResponse;
+        }
+
+        function addMessage(sender, text) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const label = sender === 'user' ? 'You' : 'AI Assistant';
+            
+            messageDiv.innerHTML = `
+                <div class="message-label">${label}</div>
+                <div class="message-content">${text}</div>
+            `;
+            
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+            statusDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // Auto-focus on chat input
+        window.addEventListener('load', () => {
+            document.getElementById('chatInput').focus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - DataSense</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            min-height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 50%;
+            animation: float 15s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(50px);
+                opacity: 0;
+            }
+        }
+
+        /* Left Panel */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            position: relative;
+            z-index: 2;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            animation: fadeInLeft 0.8s ease-out;
+        }
+
+        @keyframes fadeInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2, #f093fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from {
+                filter: drop-shadow(0 0 10px rgba(102, 126, 234, 0.5));
+            }
+            to {
+                filter: drop-shadow(0 0 20px rgba(102, 126, 234, 0.8));
+            }
+        }
+
+        .tagline {
+            color: #b8b8d1;
+            font-size: 1.2rem;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        .illustration {
+            width: 100%;
+            max-width: 450px;
+            margin-top: 2rem;
+            position: relative;
+        }
+
+        .ai-circle {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+            animation: rotate 20s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .circle-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+
+        .ring-1 {
+            width: 100%;
+            height: 100%;
+            border-color: rgba(102, 126, 234, 0.3);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .ring-2 {
+            width: 80%;
+            height: 80%;
+            top: 10%;
+            left: 10%;
+            border-color: rgba(118, 75, 162, 0.3);
+            animation: pulse 3s ease-in-out infinite 0.5s;
+        }
+
+        .ring-3 {
+            width: 60%;
+            height: 60%;
+            top: 20%;
+            left: 20%;
+            border-color: rgba(240, 147, 251, 0.3);
+            animation: pulse 3s ease-in-out infinite 1s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .center-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Right Panel */
+        .right-panel {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            z-index: 2;
+            animation: fadeInRight 0.8s ease-out;
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 3rem;
+            width: 100%;
+            max-width: 450px;
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3),
+                        0 0 60px rgba(102, 126, 234, 0.2);
+            animation: fadeIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        .login-subtitle {
+            color: #b8b8d1;
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            color: #b8b8d1;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #667eea;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.4),
+                        inset 0 0 10px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: rgba(184, 184, 209, 0.5);
+        }
+
+        /* Style for select dropdown */
+        .form-input select,
+        select.form-input {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23667eea' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            padding-right: 3rem;
+        }
+
+        select.form-input option {
+            background: #24243e;
+            color: #fff;
+            padding: 0.5rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 0.5rem;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .checkbox-group label {
+            color: #b8b8d1;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+            animation: btnPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes btnPulse {
+            0%, 100% {
+                box-shadow: 0 6px 25px rgba(102, 126, 234, 0.6);
+            }
+            50% {
+                box-shadow: 0 6px 35px rgba(118, 75, 162, 0.8);
+            }
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .links-section {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-password:hover {
+            color: #f093fb;
+            text-shadow: 0 0 10px rgba(240, 147, 251, 0.5);
+        }
+
+        .signup-text {
+            color: #b8b8d1;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        .error-message {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            color: #ff6b6b;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            display: none;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Footer */
+        footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            color: #b8b8d1;
+            font-size: 0.85rem;
+            z-index: 10;
+            background: rgba(15, 12, 41, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        footer a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #f093fb;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .left-panel {
+                padding: 2rem;
+                min-height: 40vh;
+            }
+
+            .logo {
+                font-size: 2.5rem;
+            }
+
+            .tagline {
+                font-size: 1rem;
+            }
+
+            .ai-circle {
+                width: 200px;
+                height: 200px;
+            }
+
+            .center-icon {
+                font-size: 3rem;
+            }
+
+            .right-panel {
+                padding: 2rem 1rem;
+            }
+
+            .login-card {
+                padding: 2rem;
+            }
+        }
+         .sidebarclorlink{
+            text-decoration: none;
+            color: #fff;
+        }
+        .textcenter{
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animated particles background -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="logo-section">
+                <div class="logo">DataSense</div>
+                <p class="tagline">Empowering Educators with Data-Driven Intelligence</p>
+            </div>
+
+            <div class="illustration">
+                <div class="ai-circle">
+                    <div class="circle-ring ring-1"></div>
+                    <div class="circle-ring ring-2"></div>
+                    <div class="circle-ring ring-3"></div>
+                    <div class="center-icon">🧠</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="login-card">
+                <h1 class="login-title">Welcome Back</h1>
+                <p class="login-subtitle">Login to access your DataSense dashboard</p>
+
+                <div class="error-message" id="errorMessage">
+                    Invalid credentials. Please try again.
+                </div>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label class="form-label" for="userType">Login As</label>
+                        <select id="userType" class="form-input" required>
+                            <option value="">Select your role</option>
+                            <option value="student">Student</option>
+                            <option value="teacher">Teacher</option>
+                            <option value="administrator">Administrator</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="username">Email / Username</label>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            class="form-input" 
+                            placeholder="Enter your username"
+                            required
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            class="form-input" 
+                            placeholder="Enter your password"
+                            required
+                        >
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">Remember Me</label>
+                    </div>
+
+                    <!-- <button type="submit" class="login-btn">Login</button> -->
+                    <!-- <a href="dashboard.html"><button class="login-btn">Login</button></a> -->
+                    <div class="login-btn textcenter"><a href="dashboard.html" class="sidebarclorlink">Login</a></div>
+                </form>
+
+                <div class="links-section">
+                    <a href="#" class="forgot-password">Forgot Password?</a>
+                    <p class="signup-text">
+                        Don't have an account?<br>
+                        <strong>Contact your school admin.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © DataSense 2025 | Built for Smarter Education | 
+        <a href="index.html">Back to Home</a>
+    </footer>
+
+    <script>
+        // Create animated particles
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 50;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+
+        // Login form handling
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const userTypeSelect = document.getElementById('userType');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userType = userTypeSelect.value;
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            // Check if user type is selected
+            if (!userType) {
+                errorMessage.textContent = 'Please select your role (Student, Teacher, or Administrator)';
+                errorMessage.classList.add('show');
+                return;
+            }
+
+            // Simple authentication simulation
+            if (username === 'admin' && password === '1234') {
+                // Success - redirect to dashboard
+                errorMessage.classList.remove('show');
+                
+                // Store user type for the dashboard (optional)
+                const rememberMe = document.getElementById('remember').checked;
+                if (rememberMe) {
+                    // Store in memory (not localStorage as per restrictions)
+                    window.sessionUserType = userType;
+                    window.sessionUsername = username;
+                }
+                
+                // Add success animation
+                loginForm.style.opacity = '0.5';
+                loginForm.style.pointerEvents = 'none';
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+            } else {
+                // Show error message
+                errorMessage.textContent = 'Invalid credentials. Try username: admin, password: 1234';
+                errorMessage.classList.add('show');
+                
+                // Shake the form
+                const loginCard = document.querySelector('.login-card');
+                loginCard.style.animation = 'none';
+                setTimeout(() => {
+                    loginCard.style.animation = 'shake 0.5s ease-in-out';
+                }, 10);
+                
+                // Clear the animation after it completes
+                setTimeout(() => {
+                    loginCard.style.animation = '';
+                }, 500);
+            }
+        });
+
+        // Hide error message when user starts typing or selecting
+        userTypeSelect.addEventListener('change', () => {
+            errorMessage.classList.remove('show');
+        });
+
+        usernameInput.addEventListener('input', () => {
+            errorMessage.classList.remove('show');
+        });
+
+        passwordInput.addEventListener('input', () => {
+            errorMessage.classList.remove('show');
+        });
+    </script>
+</body>
+</html>

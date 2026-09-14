@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataSense - Teacher Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: rgba(15, 12, 41, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .logo-container {
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 1.5rem 0;
+        }
+
+        .nav-item {
+            padding: 0.8rem 1.5rem;
+            margin: 0.3rem 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-left: 3px solid #667eea;
+        }
+
+        .nav-icon {
+            font-size: 1.3rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Top Bar */
+        .topbar {
+            background: rgba(15, 12, 41, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 2rem;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar input:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .notification-icon {
+            position: relative;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .notification-icon:hover {
+            color: #667eea;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #f093fb;
+            color: #fff;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .profile-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 1rem;
+            background: rgba(15, 12, 41, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 0.5rem 0;
+            min-width: 180px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .profile-dropdown.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dropdown-item {
+            padding: 0.8rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 2rem;
+            opacity: 0;
+            animation: fadeInContent 0.6s ease forwards;
+        }
+
+        @keyframes fadeInContent {
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .welcome-section {
+            margin-bottom: 2rem;
+        }
+
+        .welcome-section h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .welcome-section p {
+            color: #b8b8d1;
+        }
+
+        /* Card Styles */
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        /* AI Lesson Generator */
+        .lesson-generator {
+            animation: fadeInUp 0.6s ease forwards 0.2s;
+            opacity: 0;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b8b8d1;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #667eea;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .ai-button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ai-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .ai-button:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .ai-button:hover {
+            box-shadow: 0 0 30px rgba(102, 126, 234, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .ai-button span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .generated-content {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            display: none;
+            animation: slideIn 0.4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Student Insights Grid */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            animation: fadeInUp 0.6s ease forwards 0.4s;
+            opacity: 0;
+        }
+
+        .insight-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .insight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .student-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .insight-metric {
+            margin-bottom: 0.8rem;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #b8b8d1;
+            margin-bottom: 0.3rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        /* Teacher Progress */
+        .progress-section {
+            animation: fadeInUp 0.6s ease forwards 0.6s;
+            opacity: 0;
+        }
+
+        .skill-item {
+            margin-bottom: 1rem;
+        }
+
+        .skill-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .skill-name {
+            color: #b8b8d1;
+        }
+
+        .skill-percentage {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Notifications */
+        .notifications-panel {
+            animation: fadeInUp 0.6s ease forwards 0.8s;
+            opacity: 0;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border-left: 3px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateX(5px);
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: #b8b8d1;
+            margin-top: 0.5rem;
+        }
+
+        /* Grid Layout */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .search-bar {
+                margin: 0 1rem;
+            }
+
+            .topbar {
+                padding: 1rem;
+            }
+
+            .content-area {
+                padding: 1rem;
+            }
+
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .sidebarclorlink{
+            text-decoration: none;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <div class="logo">DataSense</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item">
+                    <a href="ai.html" class="sidebarclorlink">
+                        <span class="nav-icon">📊</span>
+                        <span>Speak to AI</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/lessonplan.html" class="sidebarclorlink">
+                        <span class="nav-icon">🎓</span>
+                        <span>Lesson Plans</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/student.html" class="sidebarclorlink">
+                        <span class="nav-icon">👥</span>
+                        <span>Students</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/analytics.html" class="sidebarclorlink">
+                        <span class="nav-icon">📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/assesment.html" class="sidebarclorlink">
+                        <span class="nav-icon">📝</span>
+                        <span>Assessments</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void();" class="sidebarclorlink">
+                        <span class="nav-icon">💬</span>
+                        <span>Messages</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="javascript:void();" class="sidebarclorlink"></a>
+                    <span class="nav-icon">⚙️</span>
+                    <span>Settings</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Bar -->
+            <div class="topbar">
+                <button class="menu-toggle" id="menuToggle">☰</button>
+                <div class="search-bar">
+                    <input type="text" placeholder="Search students, lessons, or resources...">
+                </div>
+                <div class="topbar-right">
+                    <div class="notification-icon" id="notificationIcon">
+                        🔔
+                        <span class="notification-badge">3</span>
+                    </div>
+                    <div class="profile" id="profileToggle">
+                        <div class="profile-avatar">AM</div>
+                        <span>Amina M.</span>
+                        <span>▼</span>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <div class="dropdown-item">👤 My Profile</div>
+                            <div class="dropdown-item">⚙️ Settings</div>
+                            <div class="dropdown-item">📚 Resources</div>
+                            <div class="dropdown-item">🚪 Logout</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <div class="welcome-section">
+                    <h1>Welcome back, Amina! 👋</h1>
+                    <p>Here's what's happening with your classes today</p>
+                </div>
+
+                <div class="dashboard-grid">
+                    <!-- Left Column -->
+                    <div>
+                        <!-- AI Lesson Generator -->
+                        <div class="card lesson-generator">
+                            <div class="card-header">
+                                <h2 class="card-title">🤖 AI Lesson Generator</h2>
+                            </div>
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <select id="subject">
+                                    <option>Mathematics</option>
+                                    <option>English</option>
+                                    <option>Science</option>
+                                    <option>Social Studies</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Topic</label>
+                                <input type="text" id="topic" placeholder="e.g., Quadratic Equations">
+                            </div>
+                            <div class="form-group">
+                                <label>Learning Objectives</label>
+                                <textarea id="objectives" rows="3" placeholder="Describe what students should learn..."></textarea>
+                            </div>
+                            <button class="ai-button" onclick="generateLesson()">
+                                <span>✨ Generate Lesson Plan</span>
+                            </button>
+                            <div class="generated-content" id="generatedContent">
+                                <h3>📝 Generated Lesson Plan</h3>
+                                <p><strong>Topic:</strong> <span id="outputTopic"></span></p>
+                                <p><strong>Duration:</strong> 45 minutes</p>
+                                <p><strong>Introduction (10 min):</strong> Begin with a real-world problem that requires the topic. Engage students with questions about their prior knowledge.</p>
+                                <p><strong>Main Activity (25 min):</strong> Break down the concept step-by-step with interactive examples. Use visual aids and group work to reinforce understanding.</p>
+                                <p><strong>Conclusion (10 min):</strong> Summarize key points, assign practice problems, and preview the next lesson.</p>
+                                <p><strong>Assessment:</strong> Quick quiz to check understanding before the next class.</p>
+                            </div>
+                        </div>
+
+                        <!-- Student Insights -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h2 class="card-title">📊 Student Performance Insights</h2>
+                            </div>
+                            <div class="insights-grid">
+                                <div class="insight-card">
+                                    <div class="insight-header">
+                                        <span class="student-name">Chidi O.</span>
+                                        <span>🎯</span>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Academic Strength</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Engagement</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 90%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Attendance</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 95%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="insight-card">
+                                    <div class="insight-header">
+                                        <span class="student-name">Fatima K.</span>
+                                        <span>📚</span>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Academic Strength</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 78%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Engagement</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 82%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Attendance</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 88%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="insight-card">
+                                    <div class="insight-header">
+                                        <span class="student-name">Kwame A.</span>
+                                        <span>⚠️</span>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Academic Strength</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 62%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Engagement</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 55%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Attendance</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 70%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="insight-card">
+                                    <div class="insight-header">
+                                        <span class="student-name">Aisha M.</span>
+                                        <span>⭐</span>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Academic Strength</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 92%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Engagement</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 88%"></div>
+                                        </div>
+                                    </div>
+                                    <div class="insight-metric">
+                                        <div class="metric-label">Attendance</div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 97%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <!-- Teacher Progress -->
+                        <div class="card progress-section">
+                            <div class="card-header">
+                                <h2 class="card-title">🎯 Your Teaching Progress</h2>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">AI Integration Skills</span>
+                                    <span class="skill-percentage">87%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 87%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">Student Engagement</span>
+                                    <span class="skill-percentage">92%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">Assessment Design</span>
+                                    <span class="skill-percentage">78%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 78%"></div>
+                                </div>
+                            </div>
+                            <div class="skill-item">
+                                <div class="skill-header">
+                                    <span class="skill-name">Data Analytics</span>
+                                    <span class="skill-percentage">65%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 65%"></div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(102, 126, 234, 0.1); border-radius: 10px;">
+                                <strong>💡 AI Recommendation:</strong>
+                                <p style="margin-top: 0.5rem; color: #b8b8d1;">Focus on enhancing your Data Analytics skills. Consider taking our "Analytics for Educators" course.</p>
+                            </div>
+                        </div>
+
+                        <!-- Notifications -->
+                        <div class="card notifications-panel">
+                            <div class="card-header">
+                                <h2 class="card-title">🔔 Notifications & AI Tips</h2>
+                            </div>
+                            <div class="notification-item">
+                                <strong>📚 New AI Feature Available</strong>
+                                <p style="margin-top: 0.5rem; color: #b8b8d1;">Try our new automated grading assistant for faster assessment turnaround.</p>
+                                <div class="notification-time">2 hours ago</div>
+                            </div>
+                            <div class="notification-item">
+                                <strong>💡 Teaching Tip</strong>
+                                <p style="margin-top: 0.5rem; color: #b8b8d1;">Students respond 40% better to lessons with real-world applications. Add context to your next lesson!</p>
+                                <div class="notification-time">5 hours ago</div>
+                            </div>
+                            <div class="notification-item">
+                                <strong>⚠️ Action Required</strong>
+                                <p style="margin-top: 0.5rem; color: #b8b8d1;">Kwame A. needs additional support. Review his performance insights above.</p>
+                                <div class="notification-time">1 day ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('mainContent');
+
+        menuToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('show');
+        });
+
+        // Profile dropdown toggle
+        const profileToggle = document.getElementById('profileToggle');
+        const profileDropdown = document.getElementById('profileDropdown');
+
+        profileToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            profileDropdown.classList.toggle('show');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', () => {
+            profileDropdown.classList.remove('show');
+        });
+
+        // AI Lesson Generator with Gemini API
+        async function generateLesson() {
+            const subject = document.getElementById('subject').value;
+            const topic = document.getElementById('topic').value || 'Selected Topic';
+            const objectives = document.getElementById('objectives').value;
+
+            if (!topic || topic === 'Selected Topic') {
+                alert('Please enter a topic for your lesson plan');
+                return;
+            }
+
+            // IMPORTANT: Replace with your actual Gemini API key
+            const API_KEY = AIzaSyB9Zv5CJBYV-bVFAM1vVKg7DY-nNfcvEwc;
+            
+            if (API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+                alert('⚠️ Please add your Gemini API key!\n\nGet one free at: https://makersuite.google.com/app/apikey\n\nReplace "YOUR_GEMINI_API_KEY_HERE" in the code with your actual key.');
+                return;
+            }
+
+            // Show loading state
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '<span>⏳ Generating with AI...</span>';
+            button.disabled = true;
+
+            try {
+                // Create prompt for Gemini
+                const prompt = `You are an expert African educator creating lesson plans for ${subject}.
+
+Create a detailed, culturally relevant lesson plan for the topic: "${topic}"
+
+Learning Objectives: ${objectives || 'Help students understand and apply the core concepts'}
+
+Please structure the lesson plan with:
+1. Topic and Duration
+2. Introduction (10 minutes) - engaging hook relevant to African context
+3. Main Activity (25 minutes) - step-by-step teaching with examples
+4. Conclusion (10 minutes) - summary and next steps
+5. Assessment methods
+6. Required materials
+7. Differentiation strategies for diverse learners
+
+Make it practical, engaging, and suitable for African classrooms.`;
+
+                // Call Gemini API
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const generatedText = data.candidates[0].content.parts[0].text;
+
+                // Display the generated lesson plan
+                document.getElementById('outputTopic').textContent = topic;
+                const contentDiv = document.getElementById('generatedContent');
+                contentDiv.innerHTML = `
+                    <h3>📝 Generated Lesson Plan</h3>
+                    <div style="white-space: pre-wrap; line-height: 1.8; color: #b8b8d1;">
+                        ${generatedText.replace(/\*\*(.*?)\*\*/g, '<strong style="color: #fff;">$1</strong>')}
+                    </div>
+                `;
+                contentDiv.style.display = 'block';
+
+                // Scroll to generated content
+                contentDiv.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'nearest' 
+                });
+
+            } catch (error) {
+                console.error('Error generating lesson:', error);
+                alert('❌ Error generating lesson plan. Please check:\n\n1. Your API key is correct\n2. You have internet connection\n3. API quota is not exceeded\n\nError: ' + error.message);
+            } finally {
+                // Reset button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+
+        // Navigation item click handlers
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // Animate progress bars on load
+        window.addEventListener('load', () => {
+            const progressBars = document.querySelectorAll('.progress-fill');
+            progressBars.forEach((bar, index) => {
+                const width = bar.style.width;
+                bar.style.width = '0';
+                setTimeout(() => {
+                    bar.style.width = width;
+                }, 300 + (index * 100));
+            });
+        });
+
+        // Notification icon click
+        document.getElementById('notificationIcon').addEventListener('click', () => {
+            alert('Notification panel - Full feature coming soon!');
+        });
+        </script>
