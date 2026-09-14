@@ -5,8 +5,7 @@ Provides AI-powered educational endpoints for chat, curriculum, MCQs, and flashc
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from app.routes import (
     chat_router,
     curriculum_router,
@@ -47,10 +46,15 @@ app = FastAPI(
 )
 
 # Configure CORS
+# Browsers reject a wildcard origin combined with credentials, so credentials
+# are only enabled once specific origins are configured via CORS_ORIGINS.
+_cors_origins = [origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()]
+_allow_credentials = _cors_origins != ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
+    allow_origins=_cors_origins,
+    allow_credentials=_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )

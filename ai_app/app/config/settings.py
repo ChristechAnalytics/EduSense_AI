@@ -35,7 +35,11 @@ class Settings(BaseSettings):
     # Server Configuration
     host: str = "0.0.0.0"
     port: int = 8000
-    
+
+    # CORS Configuration: comma-separated list of allowed origins, e.g.
+    # "http://localhost:3000,https://myapp.com". Defaults to "*" (no credentials).
+    cors_origins: str = "*"
+
     # Model Configuration
     model_name: str = "gemini-2.5-flash"
     temperature: float = 0.7

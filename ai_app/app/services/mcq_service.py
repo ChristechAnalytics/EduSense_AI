@@ -6,8 +6,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 from app.config import settings
+from app.services.json_utils import parse_json_response
 from typing import Dict, Any
-import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -110,44 +110,13 @@ JSON Response:"""
             })
             
             # Parse JSON response
-            mcq_data = self._parse_json_response(result["text"])
-            
+            mcq_data = parse_json_response(result["text"])
+
             return mcq_data
-            
+
         except Exception as e:
             logger.error(f"Error in generate_mcqs: {str(e)}")
             raise Exception(f"Failed to generate MCQs: {str(e)}")
-    
-    def _parse_json_response(self, response: str) -> Dict[str, Any]:
-        """
-        Parse JSON from AI response, handling potential formatting issues.
-        
-        Args:
-            response: Raw AI response text
-            
-        Returns:
-            Parsed JSON dict
-            
-        Raises:
-            ValueError: If JSON parsing fails
-        """
-        try:
-            # Try to extract JSON from markdown code blocks if present
-            if "```json" in response:
-                json_start = response.find("```json") + 7
-                json_end = response.find("```", json_start)
-                response = response[json_start:json_end].strip()
-            elif "```" in response:
-                json_start = response.find("```") + 3
-                json_end = response.find("```", json_start)
-                response = response[json_start:json_end].strip()
-            
-            # Parse JSON
-            return json.loads(response.strip())
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to parse JSON: {str(e)}\nResponse: {response}")
-            raise ValueError(f"Invalid JSON response from AI: {str(e)}")
 
 
 # Global MCQ service instance
