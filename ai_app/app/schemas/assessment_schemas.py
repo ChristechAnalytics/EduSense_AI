@@ -3,7 +3,7 @@ Schemas for topic-based assessment generation functionality (teacher-facing,
 as opposed to the content-based MCQ generator).
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import datetime
 
@@ -59,6 +59,14 @@ class AssessmentQuestion(BaseModel):
     options: Optional[List[AssessmentOption]] = Field(None, description="Answer options (multiple_choice only)")
     correct_answer: Optional[str] = Field(None, description="Correct option label (multiple_choice only)")
     suggested_answer: Optional[str] = Field(None, description="Suggested answer points (short_answer/essay only)")
+
+    @field_validator("question", "suggested_answer", mode="before")
+    @classmethod
+    def _join_if_list(cls, value):
+        """The model sometimes returns these as a list of bullet points instead of a string."""
+        if isinstance(value, list):
+            return "\n".join(str(item) for item in value)
+        return value
 
 
 class AssessmentResponse(BaseModel):

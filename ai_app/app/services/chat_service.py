@@ -4,7 +4,6 @@ Chat service for interacting with class notes using AI.
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from app.config import settings
 from typing import Dict, Any, List
 import logging
@@ -74,16 +73,16 @@ Answer:"""
                 template=prompt_template
             )
             
-            chain = LLMChain(llm=self.llm, prompt=prompt)
-            
+            chain = prompt | self.llm
+
             result = await chain.ainvoke({
                 "notes": notes,
                 "question": question,
                 "context_section": context_section
             })
-            
+
             return {
-                "answer": result["text"].strip(),
+                "answer": result.content.strip(),
                 "confidence": 0.85,
                 "sources": self._extract_relevant_snippets(notes, question)
             }

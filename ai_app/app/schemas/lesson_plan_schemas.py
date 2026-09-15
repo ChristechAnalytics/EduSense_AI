@@ -2,7 +2,7 @@
 Schemas for lesson plan generation functionality.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 
@@ -42,3 +42,15 @@ class LessonPlanResponse(BaseModel):
     assessment_methods: str = Field(..., description="How to evaluate student understanding")
     materials_needed: str = Field(..., description="Required resources")
     timestamp: datetime = Field(default_factory=datetime.now, description="Response timestamp")
+
+    @field_validator(
+        "learning_objectives", "introduction", "main_activities",
+        "assessment_methods", "materials_needed",
+        mode="before"
+    )
+    @classmethod
+    def _join_if_list(cls, value):
+        """The model sometimes returns these as a list of bullet points instead of a string."""
+        if isinstance(value, list):
+            return "\n".join(str(item) for item in value)
+        return value

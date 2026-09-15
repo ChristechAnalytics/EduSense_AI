@@ -13,6 +13,7 @@ from app.routes import (
     flashcard_router,
     lesson_plan_router,
     assessment_router,
+    assistant_router,
 )
 from app.config import settings
 import logging
@@ -97,6 +98,7 @@ app.include_router(mcq_router, prefix=API_PREFIX)
 app.include_router(flashcard_router, prefix=API_PREFIX)
 app.include_router(lesson_plan_router, prefix=API_PREFIX)
 app.include_router(assessment_router, prefix=API_PREFIX)
+app.include_router(assistant_router, prefix=API_PREFIX)
 
 
 @app.get("/", tags=["Root"])
@@ -129,7 +131,8 @@ async def global_health_check():
             "mcq": "operational",
             "flashcards": "operational",
             "lesson_plan": "operational",
-            "assessment": "operational"
+            "assessment": "operational",
+            "assistant": "operational"
         }
     }
 

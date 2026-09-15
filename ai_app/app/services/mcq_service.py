@@ -4,7 +4,6 @@ MCQ service for generating multiple choice questions from content.
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
 from app.config import settings
 from app.services.json_utils import parse_json_response
 from typing import Dict, Any
@@ -100,7 +99,7 @@ JSON Response:"""
                 template=prompt_template
             )
             
-            chain = LLMChain(llm=self.llm, prompt=prompt)
+            chain = prompt | self.llm
             
             result = await chain.ainvoke({
                 "content": content,
@@ -110,7 +109,7 @@ JSON Response:"""
             })
             
             # Parse JSON response
-            mcq_data = parse_json_response(result["text"])
+            mcq_data = parse_json_response(result.content)
 
             return mcq_data
 

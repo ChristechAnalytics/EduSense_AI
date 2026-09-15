@@ -6,6 +6,7 @@ from app.routes.mcq_routes import router as mcq_router
 from app.routes.flashcard_routes import router as flashcard_router
 from app.routes.lesson_plan_routes import router as lesson_plan_router
 from app.routes.assessment_routes import router as assessment_router
+from app.routes.assistant_routes import router as assistant_router
 
 __all__ = [
     "chat_router",
@@ -14,4 +15,5 @@ __all__ = [
     "flashcard_router",
     "lesson_plan_router",
     "assessment_router",
+    "assistant_router",
 ]
