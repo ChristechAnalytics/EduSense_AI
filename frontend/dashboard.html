@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataSense - Teacher Dashboard</title>
+    <title>EduSense AI - Teacher Dashboard</title>
     <style>
         * {
             margin: 0;
@@ -570,7 +570,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="logo-container">
-                <div class="logo">DataSense</div>
+                <div class="logo">EduSense AI</div>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active">
@@ -683,6 +683,7 @@
                             <button class="ai-button" onclick="generateLesson()">
                                 <span>✨ Generate Lesson Plan</span>
                             </button>
+                            <div id="aiStatus" style="display: none;"></div>
                             <div class="generated-content" id="generatedContent">
                                 <h3>📝 Generated Lesson Plan</h3>
                                 <p><strong>Topic:</strong> <span id="outputTopic"></span></p>
@@ -879,10 +880,11 @@
         </main>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+    <script src="shared/markdown.js"></script>
+    <script src="shared/api.js"></script>
     <script>
-        // EduSense AI backend base URL (see ai_app/README.md to run it locally)
-        const API_BASE_URL = 'http://localhost:8000/api/v1';
-
         // Mobile menu toggle
         const menuToggle = document.getElementById('menuToggle');
         const sidebar = document.getElementById('sidebar');
@@ -913,7 +915,7 @@
             const objectives = document.getElementById('objectives').value;
 
             if (!topic || topic === 'Selected Topic') {
-                alert('Please enter a topic for your lesson plan');
+                showInlineStatus('aiStatus', 'Please enter a topic for your lesson plan.', 'error');
                 return;
             }
 
@@ -924,36 +926,28 @@
             button.disabled = true;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/lesson-plan`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        topic: topic,
-                        objectives: objectives || null
-                    })
+                const plan = await edusenseApiCall('/lesson-plan', {
+                    topic: topic,
+                    objectives: objectives || null
                 });
-
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.detail || `API Error: ${response.status}`);
-                }
-
-                const plan = await response.json();
 
                 // Display the generated lesson plan
                 document.getElementById('outputTopic').textContent = plan.topic;
                 const contentDiv = document.getElementById('generatedContent');
                 contentDiv.innerHTML = `
-                    <h3>📝 ${plan.title}</h3>
-                    <p><strong>Subject:</strong> ${plan.subject} &nbsp; <strong>Grade:</strong> ${plan.grade_level} &nbsp; <strong>Duration:</strong> ${plan.duration_minutes} minutes</p>
-                    <div style="white-space: pre-wrap; line-height: 1.8; color: #b8b8d1;">
-                        <p><strong style="color: #fff;">Learning Objectives:</strong> ${plan.learning_objectives}</p>
-                        <p><strong style="color: #fff;">Introduction:</strong> ${plan.introduction}</p>
-                        <p><strong style="color: #fff;">Main Activities:</strong> ${plan.main_activities}</p>
-                        <p><strong style="color: #fff;">Assessment:</strong> ${plan.assessment_methods}</p>
-                        <p><strong style="color: #fff;">Materials Needed:</strong> ${plan.materials_needed}</p>
+                    <h3>📝 ${escapeHtml(plan.title)}</h3>
+                    <p><strong>Subject:</strong> ${escapeHtml(plan.subject)} &nbsp; <strong>Grade:</strong> ${escapeHtml(plan.grade_level)} &nbsp; <strong>Duration:</strong> ${plan.duration_minutes} minutes</p>
+                    <div style="line-height: 1.8; color: #b8b8d1;">
+                        <p style="color: #fff; margin-top: 1rem;"><strong>Learning Objectives</strong></p>
+                        ${renderMarkdownSafe(plan.learning_objectives)}
+                        <p style="color: #fff; margin-top: 1rem;"><strong>Introduction</strong></p>
+                        ${renderMarkdownSafe(plan.introduction)}
+                        <p style="color: #fff; margin-top: 1rem;"><strong>Main Activities</strong></p>
+                        ${renderMarkdownSafe(plan.main_activities)}
+                        <p style="color: #fff; margin-top: 1rem;"><strong>Assessment</strong></p>
+                        ${renderMarkdownSafe(plan.assessment_methods)}
+                        <p style="color: #fff; margin-top: 1rem;"><strong>Materials Needed</strong></p>
+                        ${renderMarkdownSafe(plan.materials_needed)}
                     </div>
                 `;
                 contentDiv.style.display = 'block';
@@ -966,11 +960,7 @@
 
             } catch (error) {
                 console.error('Error generating lesson:', error);
-                let message = 'Error generating lesson plan.\n\n' + error.message;
-                if (error.message.includes('Failed to fetch')) {
-                    message = `❌ Could not reach the EduSense AI backend at ${API_BASE_URL}.\n\nMake sure ai_app is running and, if you opened this page from disk, serve it over HTTP instead (see ai_app/README.md) so CORS works.`;
-                }
-                alert(message);
+                showInlineStatus('aiStatus', '❌ ' + error.message, 'error', 0);
             } finally {
                 // Reset button
                 button.innerHTML = originalText;

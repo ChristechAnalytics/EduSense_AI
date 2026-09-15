@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataSense - Assessments</title>
+    <title>EduSense AI - Assessments</title>
     <style>
         * {
             margin: 0;
@@ -683,7 +683,7 @@
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
             <div class="logo-container">
-                <div class="logo">DataSense</div>
+                <div class="logo">EduSense AI</div>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item">
@@ -1018,6 +1018,7 @@
         <button class="ai-generate-btn" id="generateAssessmentBtn" onclick="generateAssessment()">
             ✨ Generate Assessment
         </button>
+        <div id="aiStatus" style="display: none;"></div>
 
         <div class="generated-questions-section" id="generatedQuestionsSection">
             <h3>Generated Questions</h3>
@@ -1045,10 +1046,11 @@
     </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="../shared/markdown.js"></script>
+<script src="../shared/api.js"></script>
 <script>
-    // EduSense AI backend base URL (see ai_app/README.md to run it locally)
-    const API_BASE_URL = 'http://localhost:8000/api/v1';
-
     // Mobile menu toggle
     const menuToggle = document.getElementById('menuToggle');
     const sidebar = document.getElementById('sidebar');
@@ -1108,7 +1110,7 @@
         const difficulty = document.getElementById('aiDifficulty').value;
 
         if (!topic) {
-            alert('Please enter a topic for the assessment.');
+            showInlineStatus('aiStatus', 'Please enter a topic for the assessment.', 'error');
             return;
         }
 
@@ -1118,27 +1120,14 @@
         generateBtn.disabled = true;
 
         try {
-            const response = await fetch(`${API_BASE_URL}/assessment`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    subject: subject,
-                    class_level: classLevel,
-                    topic: topic,
-                    assessment_type: assessmentType,
-                    num_questions: parseInt(numQuestions, 10),
-                    difficulty: difficulty
-                })
+            const data = await edusenseApiCall('/assessment', {
+                subject: subject,
+                class_level: classLevel,
+                topic: topic,
+                assessment_type: assessmentType,
+                num_questions: parseInt(numQuestions, 10),
+                difficulty: difficulty
             });
-
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || `HTTP Error: ${response.status}`);
-            }
-
-            const data = await response.json();
 
             const generatedQuestionsOutput = document.getElementById('generatedQuestionsOutput');
             generatedQuestionsOutput.innerHTML = formatGeneratedQuestions(data.questions);
@@ -1146,11 +1135,7 @@
 
         } catch (error) {
             console.error('Error generating assessment:', error);
-            let message = 'Error generating assessment.\n\n' + error.message;
-            if (error.message.includes('Failed to fetch')) {
-                message = `❌ Could not reach the EduSense AI backend at ${API_BASE_URL}.\n\nMake sure ai_app is running and, if you opened this page from disk, serve it over HTTP instead (see ai_app/README.md) so CORS works.`;
-            }
-            alert(message);
+            showInlineStatus('aiStatus', '❌ ' + error.message, 'error', 0);
         } finally {
             generateBtn.innerHTML = originalBtnText;
             generateBtn.disabled = false;
@@ -1163,19 +1148,19 @@
         questions.forEach(q => {
             html += `<div class="question-item">`;
             html += `<div class="question-number">Question ${q.question_number}</div>`;
-            html += `<p class="question-text">${q.question}</p>`;
+            html += `<div class="question-text">${renderMarkdownSafe(q.question)}</div>`;
 
             if (q.question_type === 'multiple_choice' && q.options) {
                 html += `<ul class="options-list">`;
                 q.options.forEach(opt => {
-                    html += `<li class="option-item">${opt.option}) ${opt.text}</li>`;
+                    html += `<li class="option-item">${escapeHtml(opt.option)}) ${escapeHtml(opt.text)}</li>`;
                 });
                 html += `</ul>`;
                 if (q.correct_answer) {
-                    html += `<p style="font-style: italic; color: #4cd964;">Correct answer: ${q.correct_answer}</p>`;
+                    html += `<p style="font-style: italic; color: #4cd964;">Correct answer: ${escapeHtml(q.correct_answer)}</p>`;
                 }
             } else if (q.suggested_answer) {
-                html += `<p style="font-style: italic; color: #b8b8d1;">Suggested answer: ${q.suggested_answer}</p>`;
+                html += `<div style="font-style: italic; color: #b8b8d1;">Suggested answer: ${renderMarkdownSafe(q.suggested_answer)}</div>`;
             }
 
             html += `</div>`;

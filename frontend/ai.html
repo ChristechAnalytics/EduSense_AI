@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DataSense AI Assistant - Your Personal Education Companion</title>
+    <title>EduSense AI Assistant - Your Personal Education Companion</title>
     <style>
         * {
             margin: 0;
@@ -223,6 +223,23 @@
             text-align: left;
         }
 
+        .message-content > *:first-child {
+            margin-top: 0;
+        }
+
+        .message-content > *:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-content ul,
+        .message-content ol {
+            padding-left: 1.25em;
+        }
+
+        .message-content strong {
+            color: #fff;
+        }
+
         .message-label {
             font-size: 12px;
             color: #b8b8d1;
@@ -421,11 +438,34 @@
         .info-box a:hover {
             color: #f093fb;
         }
+
+        .info-box code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .info-box ol {
+            margin: 10px 0;
+            padding-left: 22px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .info-box .info-box-note {
+            margin-top: 12px;
+            display: block;
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
-        <div class="logo">DataSense AI</div>
+        <div class="logo">EduSense AI</div>
         <div class="nav-links">
             <a href="index.html">Home</a>
             <a href="dashboard.html">Dashboard</a>
@@ -436,15 +476,16 @@
 
     <div class="container">
         <div class="header">
-            <h1>🤖 DataSense AI Assistant</h1>
+            <h1>🤖 EduSense AI Assistant</h1>
             <p>Your Personal Education Companion - Powered by the EduSense AI backend</p>
-            <div class="info-box" style="max-width: 800px; margin: 20px auto;">
-                <strong>🔌 Setup Instructions:</strong><br>
-                1. From <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">ai_app/</code>, copy <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">.env.example</code> to <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">.env</code> and add your Gemini API key<br>
-                2. Start the backend: <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">uvicorn app.main:app --reload --port 8000</code><br>
-                3. Serve this frontend from a local HTTP server (not <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">file://</code>) so CORS works, e.g. <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">python -m http.server 5500</code> from <code style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 5px;">frontend/</code><br>
-                <br>
-                <strong>✨ The API key now lives only on the backend, never in this page.</strong>
+            <div class="info-box" style="max-width: 800px; margin: 20px auto; text-align: left;">
+                <strong>🔌 Setup Instructions</strong>
+                <ol>
+                    <li>From <code>ai_app/</code>, copy <code>.env.example</code> to <code>.env</code> and add your Gemini API key</li>
+                    <li>Start the backend: <code>uvicorn app.main:app --reload --port 8000</code></li>
+                    <li>Serve this frontend from a local HTTP server (not <code>file://</code>) so CORS works, e.g. <code>python -m http.server 5500</code> from <code>frontend/</code></li>
+                </ol>
+                <strong class="info-box-note">✨ The API key now lives only on the backend, never in this page.</strong>
             </div>
         </div>
 
@@ -482,7 +523,7 @@
                 <div class="message ai">
                     <div class="message-label">AI Assistant</div>
                     <div class="message-content">
-                        Hello! 👋 I'm your DataSense AI Assistant. Please select your role above and set up your API key to get started. I'm here to help with all your educational needs!
+                        Hello! 👋 I'm your EduSense AI Assistant. Please select your role above to get started. I'm here to help with all your educational needs!
                     </div>
                 </div>
             </div>
@@ -500,10 +541,12 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+    <script src="shared/markdown.js"></script>
+    <script src="shared/api.js"></script>
     <script>
         let currentRole = null;
-        // EduSense AI backend base URL (see ai_app/README.md to run it locally)
-        const API_BASE_URL = 'http://localhost:8000/api/v1';
         let conversationHistory = [];
 
         const rolePrompts = {
@@ -640,30 +683,18 @@ Be informative, engaging, and adaptable to any learning need.`
         }
 
         async function callBackendAPI(userMessage) {
-            // The role prompt becomes the "notes" the chat endpoint answers from;
-            // the last exchange (if any) is passed as context for continuity.
+            // The role prompt guides the assistant's persona; the last exchange
+            // (if any) is passed as context for continuity.
             const lastExchange = conversationHistory[conversationHistory.length - 1];
 
-            const response = await fetch(`${API_BASE_URL}/chat`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    notes: rolePrompts[currentRole],
-                    question: userMessage,
-                    context: lastExchange
-                        ? `Previous question: ${lastExchange.user}\nPrevious answer: ${lastExchange.ai}`
-                        : null
-                })
+            const data = await edusenseApiCall('/assistant', {
+                role_context: rolePrompts[currentRole],
+                question: userMessage,
+                context: lastExchange
+                    ? `Previous question: ${lastExchange.user}\nPrevious answer: ${lastExchange.ai}`
+                    : null
             });
 
-            if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(errorData.detail || 'Failed to reach the EduSense AI backend');
-            }
-
-            const data = await response.json();
             const aiResponse = data.answer;
 
             conversationHistory.push({
@@ -680,10 +711,11 @@ Be informative, engaging, and adaptable to any learning need.`
             messageDiv.className = `message ${sender}`;
             
             const label = sender === 'user' ? 'You' : 'AI Assistant';
-            
+            const content = sender === 'user' ? escapeHtml(text) : renderMarkdownSafe(text);
+
             messageDiv.innerHTML = `
                 <div class="message-label">${label}</div>
-                <div class="message-content">${text}</div>
+                <div class="message-content">${content}</div>
             `;
             
             messagesDiv.appendChild(messageDiv);
